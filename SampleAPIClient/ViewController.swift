@@ -54,15 +54,27 @@ protocol APIRequest {
 
 extension APIRequest {
     var urlRequest: URLRequest? {
-        guard let urlComponents = URLComponents(string: url) else { return nil }
+        guard var urlComponents = URLComponents(string: url + path) else { return nil }
+        var urlQueryItems: [URLQueryItem] = []
+        queries.forEach { key, value in
+            urlQueryItems.append(URLQueryItem(name: key, value: value))
+        }
+        urlComponents.queryItems = urlQueryItems
         guard let url = urlComponents.url else { return nil }
-        let request = URLRequest(url: url)
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod
+        if let body = body {
+            request.httpBody = body
+        }
+        headers.forEach { (key: String, value: String) in
+            request.addValue(value, forHTTPHeaderField: key)
+        }
         return request
     }
     
     var session: URLSession {
         let config: URLSessionConfiguration = URLSessionConfiguration.default
-        config.timeoutIntervalForResource = 60
+        config.timeoutIntervalForResource = timeout
         let session = URLSession(configuration: config)
         return session
     }
