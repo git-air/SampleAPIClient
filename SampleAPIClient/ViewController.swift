@@ -25,7 +25,7 @@ class ViewController: UIViewController {
 
 class GitHubReposAPIClient {
     let api = DefaultAPI.shared
-    let request = GitHubReposRequest()
+    let request = GitHubReposRequest(user: "git-air")
     
     func reqestGitHubRepos(completion: @escaping ResultCallback<[GitHubRepository], APIError>) {
         api.request(request) { result in
@@ -43,6 +43,12 @@ protocol APIClient {
 protocol APIRequest {
     associatedtype ResponseType: Decodable
     var url: String { get }
+    var path: String { get }
+    var httpMethod: String { get }
+    var headers: [String: String] { get }
+    var body: Data? { get }
+    var queries: [String: String] { get }
+    var timeout: TimeInterval { get }
     func decode(from data: Data) throws -> ResponseType
 }
 
@@ -83,8 +89,34 @@ struct GitHubRepository: Decodable {
 struct GitHubReposRequest: APIRequest {
     typealias ResponseType = [GitHubRepository]
     
+    var user: String
+    
     var url: String {
-        return "https://api.github.com/users/git-air/repos"
+        return "https://api.github.com/users/\(user)/repos"
+    }
+    
+    var path: String {
+        return "repos"
+    }
+    
+    var httpMethod: String {
+        return "GET"
+    }
+    
+    var headers: [String : String] {
+        return [:]
+    }
+    
+    var body: Data? {
+        return nil
+    }
+    
+    var queries: [String : String] {
+        return [:]
+    }
+    
+    var timeout: TimeInterval {
+        return 60
     }
 }
 
