@@ -8,7 +8,7 @@
 import UIKit
 
 class ViewController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -20,26 +20,6 @@ class ViewController: UIViewController {
             case .failure(let error):
                 print(error)
             }
-        }
-//        let g = GitHubReposAPIClient()
-//        g.reqestGitHubRepos { result in
-//            switch result {
-//            case .success(let data):
-//                print(data[0])
-//            case .failure(let error):
-//                print(error)
-//            }
-//        }
-    }
-}
-
-class GitHubReposAPIClient {
-    let api = DefaultAPI.shared
-    let request = GitHubReposRequest(user: "git-air")
-    
-    func reqestGitHubRepos(completion: @escaping ResultCallback<[GitHubRepository], APIError>) {
-        api.request(request) { result in
-            completion(result)
         }
     }
 }
@@ -54,7 +34,7 @@ protocol APIRequest {
     associatedtype ResponseType: Decodable
     var url: String { get }
     var path: String { get }
-    var httpMethod: String { get }
+    var httpMethod: HTTPMethod { get }
     var headers: [String: String] { get }
     var body: Data? { get }
     var queries: [String: String] { get }
@@ -121,8 +101,8 @@ struct GitHubReposRequest: APIRequest {
         return "/repos"
     }
     
-    var httpMethod: String {
-        return "GET"
+    var httpMethod: HTTPMethod {
+        return .get
     }
     
     var headers: [String : String] {
@@ -172,6 +152,18 @@ class DefaultAPI: APIClient {
         }
         task.resume()
     }
+}
+
+enum HTTPMethod: String {
+    case connect = "CONNECT"
+    case delete = "DELETE"
+    case get = "GET"
+    case head = "HEAD"
+    case options = "OPTIONS"
+    case patch = "PATCH"
+    case post = "POST"
+    case put = "PUT"
+    case trace = "TRACE"
 }
 
 enum APIError: Error {

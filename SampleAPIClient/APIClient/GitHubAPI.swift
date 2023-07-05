@@ -1,134 +1,160 @@
-//
-//  GitHubAPI.swift
-//  SampleAPIClient
-//
-//  Created by AIR on 2023/07/04.
-//
-
 import Foundation
 
-/// 型 A か型 B のどちらかのオブジェクトを表す型。
-/// たとえば、Either<String, Int> は文字列か整数のどちらかを意味する。
-/// なお、慣例的にどちらの型かを左右で表現することが多い。
+
 enum Either<Left, Right> {
-    /// Eigher<A, B> の A の方の型。
     case left(Left)
-    
-    /// Eigher<A, B> の B の方の型。
     case right(Right)
-    
-    
-    /// もし、左側の型ならその値を、右側の型なら nil を返す。
+
     var left: Left? {
         switch self {
         case let .left(x):
             return x
-            
+
         case .right:
             return nil
         }
     }
-    
-    /// もし、右側の型ならその値を、左側の型なら nil を返す。
+
     var right: Right? {
         switch self {
         case .left:
             return nil
-            
+
         case let .right(x):
             return x
         }
     }
 }
 
+
+
 struct GitHubZen {
     let text: String
-    
-    
+
+
     static func from(response: Response) -> Either<TransformError, GitHubZen> {
         switch response.statusCode {
         case .ok:
-            // HTTP ステータスが OK だったら、ペイロードの中身を確認する。
-            // Zen API は UTF-8 で符号化された文字列を返すはずので Data を UTF-8 として
-            // 解釈してみる。
             guard let string = String(data: response.payload, encoding: .utf8) else {
-                // もし、Data が UTF-8 の文字列でなければ、誤って画像などを受信してしまったのかもしれない。。
-                // この場合は、malformedData エラーを返す（エラーの型は左なので .left を使う）。
                 return .left(.malformedData(debugInfo: "not UTF-8 string"))
             }
-            
-            // もし、内容を UTF-8 で符号化された文字列として読み取れたなら、
-            // その文字列から GitHubZen を作って返す（エラーではない型は右なので .right を使う）
+
             return .right(GitHubZen(text: string))
-            
+
         default:
-            // もし、HTTP ステータスコードが OK 以外であれば、エラーとして扱う。
-            // たとえば、GitHub API を呼び出しすぎたときは 200 OK ではなく 403 Forbidden が
-            // 返るのでこちらにくる。
             return .left(.unexpectedStatusCode(
-                // エラーの内容がわかりやすいようにステータスコードを入れて返す。
                 debugInfo: "\(response.statusCode)")
             )
         }
     }
-    
-    /// GitHub Zen API を使って、禅なフレーズを取得する関数。
+
+
     static func fetch(
-        // コールバック経由で、接続エラーか変換エラーか GitHubZen のいずれかを受け取れるようにする。
         _ block: @escaping (Either<Either<ConnectionError, TransformError>, GitHubZen>) -> Void
-        
-        // コールバックの引数の型が少しわかりづらいが、次の3パターンになる。
-        //
-        // - 接続エラーの場合     → .left(.left(ConnectionEither))
-        // - 変換エラーの場合     → .left(.right(TransformError))
-        // - 正常に取得できた場合 → .right(GitHubZen)
     ) {
-        // URL が生成できない場合は不正な URL エラーを返す
         let urlString = "https://api.github.com/zen"
         guard let url = URL(string: urlString) else {
             block(.left(.left(.malformedURL(debugInfo: urlString))))
             return
         }
-        
-        // GitHub Zen API は何も入力パラメータがないので入力は固定値になる。
+
         let input: Input = (
             url: url,
             queries: [],
             headers: [:],
             methodAndPayload: .get
         )
-        
-        // GitHub Zen API を呼び出す。
         WebAPI.call(with: input) { output in
             switch output {
             case let .noResponse(connectionError):
-                // 接続エラーの場合は、接続エラーを渡す。
                 block(.left(.left(connectionError)))
-                
+
             case let .hasResponse(response):
-                // レスポンスがわかりやすくなるように GitHubZen へと変換する。
                 let errorOrZen = GitHubZen.from(response: response)
-                
+
                 switch errorOrZen {
                 case let .left(error):
-                    // 変換エラーの場合は、変換エラーを渡す。
                     block(.left(.right(error)))
-                    
+
                 case let .right(zen):
-                    // 正常に変換できた場合は、GitHubZen オブジェクトを渡す。
                     block(.right(zen))
                 }
             }
         }
     }
-    
-    
-    /// GitHub Zen API で起きうるエラーの一覧。
+
+
     enum TransformError {
-        /// ペイロードが壊れた文字列だった場合のエラー。
         case malformedData(debugInfo: String)
-        
-        /// HTTP ステータスコードが OK 以外だった場合のエラー。
+        case unexpectedStatusCode(debugInfo: String)
+    }
+}
+
+
+
+struct GitHubUser: Codable {
+    let id: Int
+    let login: String
+
+
+    static func from(response: Response) -> Either<TransformError, GitHubUser> {
+        switch response.statusCode {
+            case .ok:
+                do {
+                    let jsonDecoder = JSONDecoder()
+                    let user = try jsonDecoder.decode(GitHubUser.self, from: response.payload)
+                    return .right(user)
+                }
+                catch {
+                    return .left(.malformedData(debugInfo: "\(error)"))
+                }
+
+            default:
+                return .left(.unexpectedStatusCode(debugInfo: "\(response.statusCode)"))
+        }
+    }
+
+
+    static func fetch(
+        byLogin login: String,
+        _ block: @escaping (Either<Either<ConnectionError, TransformError>, GitHubUser>) -> Void
+    ) {
+        let urlString = "https://api.github.com/users"
+        guard let url = URL(string: urlString)?.appendingPathComponent(login) else {
+            block(.left(.left(.malformedURL(debugInfo: "\(urlString)/\(login)"))))
+            return
+        }
+
+        let input: Input = (
+            url: url,
+            queries: [],
+            headers: [:],
+            methodAndPayload: .get
+        )
+
+        WebAPI.call(with: input) { output in
+            switch output {
+            case let .noResponse(connectionError):
+                block(.left(.left(connectionError)))
+
+            case let .hasResponse(response):
+                let errorOrUser = GitHubUser.from(response: response)
+
+                switch errorOrUser {
+                case let .left(transformError):
+                    block(.left(.right(transformError)))
+
+                case let .right(user):
+                    block(.right(user))
+                }
+            }
+        }
+    }
+
+
+    enum TransformError {
+        case malformedUsername(debugInfo: String)
+        case malformedData(debugInfo: String)
         case unexpectedStatusCode(debugInfo: String)
     }
 }

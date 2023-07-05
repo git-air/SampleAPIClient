@@ -21,20 +21,12 @@ final class GitHubAPITests: XCTestCase {
     func testZenFetch() {
         let expectation = self.expectation(description: "API")
         
-        // GitHub Zen API には入力パラメータがないので、関数呼び出し時には
-        // 引数は指定しなくて済むようにしたい。また、API 呼び出しは非同期なので、
-        // コールバックをとるはず（注: GitHubZen.fetch はあとで定義する）。
         GitHubZen.fetch { errorOrZen in
-            // エラーかレスポンスがきたらコールバックが実行されて欲しい。
-            // できれば、結果はすでに変換済みの GitHubZen オブジェクトを受け取りたい。
-            
             switch errorOrZen {
             case let .left(error):
-                // エラーがきたらわかりやすいようにする。
                 XCTFail("\(error)")
                 
             case let .right(zen):
-                // 結果をきちんと受け取れたことを確認する。
                 XCTAssertNotNil(zen)
             }
             
@@ -45,7 +37,6 @@ final class GitHubAPITests: XCTestCase {
     }
     
     
-    // API を二度呼ぶ方もかなり可読性が上がっている。
     func testZenFetchTwice() {
         let expectation = self.expectation(description: "API")
         
@@ -66,6 +57,47 @@ final class GitHubAPITests: XCTestCase {
                     }
                 }
             }
+        }
+        
+        self.waitForExpectations(timeout: 10)
+    }
+    
+    
+    func testUser() throws {
+        let response: Response = (
+            statusCode: .ok,
+            headers: [:],
+            payload: try JSONSerialization.data(withJSONObject: [
+                "id": 1,
+                "login": "octocat"
+            ] as [String : Any])
+        )
+        
+        switch GitHubUser.from(response: response) {
+        case let .left(error):
+            XCTFail("\(error)")
+            
+        case let .right(user):
+            XCTAssertEqual(user.id, 1)
+            XCTAssertEqual(user.login, "octocat")
+        }
+    }
+    
+    
+    func testUserFetch() {
+        let expectation = self.expectation(description: "API")
+        
+        GitHubUser.fetch(byLogin: "Kuniwak") { errorOrUser in
+            switch errorOrUser {
+            case let .left(error):
+                XCTFail("\(error)")
+                
+            case let .right(user):
+                XCTAssertEqual(user.id, 1124024)
+                XCTAssertEqual(user.login, "Kuniwak")
+            }
+            
+            expectation.fulfill()
         }
         
         self.waitForExpectations(timeout: 10)
