@@ -11,8 +11,9 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let g = GitHubReposAPIClient()
-        g.reqestGitHubRepos { result in
+        
+        let repoRequest = GitHubReposRequest(user: "git-air")
+        DefaultAPI.shared.request(repoRequest) { result in
             switch result {
             case .success(let data):
                 print(data[0])
@@ -20,6 +21,15 @@ class ViewController: UIViewController {
                 print(error)
             }
         }
+//        let g = GitHubReposAPIClient()
+//        g.reqestGitHubRepos { result in
+//            switch result {
+//            case .success(let data):
+//                print(data[0])
+//            case .failure(let error):
+//                print(error)
+//            }
+//        }
     }
 }
 
@@ -104,11 +114,11 @@ struct GitHubReposRequest: APIRequest {
     var user: String
     
     var url: String {
-        return "https://api.github.com/users/\(user)/repos"
+        return "https://api.github.com/users/\(user)"
     }
     
     var path: String {
-        return "repos"
+        return "/repos"
     }
     
     var httpMethod: String {
