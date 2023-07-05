@@ -19,28 +19,53 @@ final class GitHubAPITests: XCTestCase {
     }
     
     func testZenFetch() {
-        // コードは StartSmallForAPITests.testRequestAndResopnse から拝借してきた。
-        
         let expectation = self.expectation(description: "API")
         
-        let input: Input = (
-            url: URL(string: "https://api.github.com/zen")!,
-            queries: [],
-            headers: [:],
-            methodAndPayload: .get
-        )
-        
-        WebAPI.call(with: input) { output in
-            switch output {
-            case .noResponse:
-                XCTFail("No response")
+        // GitHub Zen API には入力パラメータがないので、関数呼び出し時には
+        // 引数は指定しなくて済むようにしたい。また、API 呼び出しは非同期なので、
+        // コールバックをとるはず（注: GitHubZen.fetch はあとで定義する）。
+        GitHubZen.fetch { errorOrZen in
+            // エラーかレスポンスがきたらコールバックが実行されて欲しい。
+            // できれば、結果はすでに変換済みの GitHubZen オブジェクトを受け取りたい。
+            
+            switch errorOrZen {
+            case let .left(error):
+                // エラーがきたらわかりやすいようにする。
+                XCTFail("\(error)")
                 
-            case let .hasResponse(response):
-                let errorOrZen = GitHubZen.from(response: response)
-                XCTAssertNotNil(errorOrZen.right)
+            case let .right(zen):
+                // 結果をきちんと受け取れたことを確認する。
+                XCTAssertNotNil(zen)
             }
             
             expectation.fulfill()
+        }
+        
+        self.waitForExpectations(timeout: 10)
+    }
+    
+    
+    // API を二度呼ぶ方もかなり可読性が上がっている。
+    func testZenFetchTwice() {
+        let expectation = self.expectation(description: "API")
+        
+        GitHubZen.fetch { errorOrZen in
+            switch errorOrZen {
+            case let .left(error):
+                XCTFail("\(error)")
+                
+            case .right(_):
+                GitHubZen.fetch { errorOrZen in
+                    switch errorOrZen {
+                    case let .left(error):
+                        XCTFail("\(error)")
+                        
+                    case let .right(zen):
+                        XCTAssertNotNil(zen)
+                        expectation.fulfill()
+                    }
+                }
+            }
         }
         
         self.waitForExpectations(timeout: 10)

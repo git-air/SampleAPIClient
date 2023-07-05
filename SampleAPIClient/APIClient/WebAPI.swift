@@ -147,10 +147,11 @@ enum Output {
 
 
 
-/// 通信エラー。
 enum ConnectionError {
-    /// データまたはレスポンスが存在しない場合のエラー。
     case noDataOrNoResponse(debugInfo: String)
+    
+    /// 不正な URL の場合のエラー。
+    case malformedURL(debugInfo: String)
 }
 
 
