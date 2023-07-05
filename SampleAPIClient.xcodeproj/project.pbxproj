@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		45157C392A55A84B002E3129 /* GitHubAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45157C382A55A84B002E3129 /* GitHubAPITests.swift */; };
 		4529117E2A5314BC00A21785 /* WebAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4529117D2A5314BC00A21785 /* WebAPI.swift */; };
 		4529117F2A5314C500A21785 /* WebAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4529117D2A5314BC00A21785 /* WebAPI.swift */; };
 		452911812A53153A00A21785 /* WebAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452911802A53153A00A21785 /* WebAPITests.swift */; };
@@ -41,6 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		45157C382A55A84B002E3129 /* GitHubAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubAPITests.swift; sourceTree = "<group>"; };
 		4529117D2A5314BC00A21785 /* WebAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAPI.swift; sourceTree = "<group>"; };
 		452911802A53153A00A21785 /* WebAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAPITests.swift; sourceTree = "<group>"; };
 		452911822A53252600A21785 /* GitHubAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubAPI.swift; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 			children = (
 				45B778612A4EA6E500F342ED /* SampleAPIClientTests.swift */,
 				452911802A53153A00A21785 /* WebAPITests.swift */,
+				45157C382A55A84B002E3129 /* GitHubAPITests.swift */,
 			);
 			path = SampleAPIClientTests;
 			sourceTree = "<group>";
@@ -290,6 +293,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				45B778622A4EA6E500F342ED /* SampleAPIClientTests.swift in Sources */,
+				45157C392A55A84B002E3129 /* GitHubAPITests.swift in Sources */,
 				4529117F2A5314C500A21785 /* WebAPI.swift in Sources */,
 				452911812A53153A00A21785 /* WebAPITests.swift in Sources */,
 				452911852A542D9500A21785 /* GitHubAPI.swift in Sources */,
