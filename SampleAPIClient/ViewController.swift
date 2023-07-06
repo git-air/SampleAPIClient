@@ -52,7 +52,7 @@ extension APIRequest {
         urlComponents.queryItems = urlQueryItems
         guard let url = urlComponents.url else { return nil }
         var request = URLRequest(url: url)
-        request.httpMethod = httpMethod
+        request.httpMethod = httpMethod.rawValue
         if let body = body {
             request.httpBody = body
         }
