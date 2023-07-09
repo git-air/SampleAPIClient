@@ -26,7 +26,9 @@ extension APIRequest {
         queries.forEach { key, value in
             urlQueryItems.append(URLQueryItem(name: key, value: value))
         }
-        urlComponents.queryItems = urlQueryItems
+        if !urlQueryItems.isEmpty {
+            urlComponents.queryItems = urlQueryItems
+        }
         guard let url = urlComponents.url else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod.rawValue
