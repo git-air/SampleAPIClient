@@ -25,7 +25,6 @@ final class WebAPITests: XCTestCase {
             methodAndPayload: .get
         )
         WebAPI.call(with: input)
-        
     }
     
     
